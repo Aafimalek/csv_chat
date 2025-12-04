@@ -1,0 +1,43 @@
+# General
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+.env.*
+! .env.example
+*.sqlite3
+/venv/
+/__pycache__/
+
+# Node.js / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.next/
+out/
+build/
+dist/
+.vercel/
+/node_modules/
+/.next/
+/out/
+/build/
+
+# Data Files (Large files should not be committed)
+*.csv
+*.zip
+*.json
+!package.json
+!tsconfig.json
+!jsconfig.json
