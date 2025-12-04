@@ -13,6 +13,8 @@ export interface ChatSession {
     title: string;
     date: number;
     preview: string;
+    fileName?: string;
+    columns?: string[];
 }
 
 interface SidebarProps {

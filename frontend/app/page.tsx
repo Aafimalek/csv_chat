@@ -88,7 +88,15 @@ export default function Home() {
 
       // Create a new session if none exists or if we want to associate this file with a new session
       if (!currentSessionId) {
-        createNewSession(selectedFile.name);
+        createNewSession(selectedFile.name, selectedFile.name, cols);
+      } else {
+        // Update current session with new file info
+        setSessions(prev => prev.map(s => {
+          if (s.id === currentSessionId) {
+            return { ...s, title: selectedFile.name, fileName: selectedFile.name, columns: cols };
+          }
+          return s;
+        }));
       }
 
     } catch (error) {
@@ -99,17 +107,74 @@ export default function Home() {
     }
   };
 
-  const createNewSession = (fileName: string = "New Chat") => {
+  const createNewSession = (title: string = "New Chat", fileName?: string, cols?: string[]) => {
     const newId = uuidv4();
     const newSession: ChatSession = {
       id: newId,
-      title: fileName,
+      title: title,
       date: Date.now(),
-      preview: "Started a new chat"
+      preview: "Started a new chat",
+      fileName: fileName,
+      columns: cols
     };
     setSessions(prev => [newSession, ...prev]);
     setCurrentSessionId(newId);
     setMessages([]);
+  };
+
+  const handleSelectSession = async (id: string) => {
+    const session = sessions.find(s => s.id === id);
+    if (!session) return;
+
+    setCurrentSessionId(id);
+
+    // Determine filename: use saved fileName, or fallback to title (for legacy sessions), or default
+    const fileName = session.fileName || session.title || "Restored Session";
+
+    // Always set file to switch UI to chat mode
+    // BUT only create a dummy file if we don't already have the real one loaded
+    if (!file || file.name !== fileName) {
+      setFile({ name: fileName } as File);
+    }
+
+    // Restore columns if available
+    if (session.columns) {
+      setColumns(session.columns);
+    }
+
+    // Try to restore Pyodide context if we have a valid filename
+    if (fileName) {
+      try {
+        // Check if file exists in Pyodide FS
+        const fileExists = pyodide.runPython(`
+                  import os
+                  os.path.exists('${fileName}')
+              `);
+
+        if (fileExists) {
+          pyodide.runPython(`
+                      import pandas as pd
+                      df = pd.read_csv('${fileName}')
+                  `);
+          console.log("Context restored for", fileName);
+        } else {
+          console.warn("File not found in memory:", fileName);
+          // Notify user they might need to re-upload if they want to run code
+          // We only add this system message if it's not already the last message to avoid spamming
+          setMessages(prev => {
+            const lastMsg = prev[prev.length - 1];
+            if (lastMsg?.content?.includes("not currently loaded")) return prev;
+
+            return [...prev, {
+              role: 'assistant',
+              content: `⚠️ The file "${fileName}" is not currently loaded in memory. You can view the chat history, but to perform new analyses, please re-upload the file.`
+            }];
+          });
+        }
+      } catch (e) {
+        console.error("Failed to restore context:", e);
+      }
+    }
   };
 
   const handleDeleteSession = (id: string, e: React.MouseEvent) => {
@@ -145,9 +210,7 @@ export default function Home() {
       <Sidebar
         sessions={sessions}
         currentSessionId={currentSessionId}
-        onSelectSession={(id) => {
-          setCurrentSessionId(id);
-        }}
+        onSelectSession={handleSelectSession}
         onNewChat={() => {
           setFile(null);
           setCurrentSessionId(null);
@@ -249,6 +312,7 @@ export default function Home() {
                   pyodide={pyodide}
                   columns={columns}
                   fileName={file.name}
+                  selectedFile={file}
                   messages={messages}
                   setMessages={setMessages}
                 />

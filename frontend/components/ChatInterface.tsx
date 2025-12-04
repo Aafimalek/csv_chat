@@ -19,11 +19,12 @@ interface ChatInterfaceProps {
     pyodide: any;
     columns: string[];
     fileName: string;
+    selectedFile: File | null;
     messages: Message[];
     setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
 }
 
-export default function ChatInterface({ pyodide, columns, fileName, messages, setMessages }: ChatInterfaceProps) {
+export default function ChatInterface({ pyodide, columns, fileName, selectedFile, messages, setMessages }: ChatInterfaceProps) {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -44,6 +45,49 @@ export default function ChatInterface({ pyodide, columns, fileName, messages, se
         setInput('');
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
         setIsLoading(true);
+
+        // Check if df is loaded using JS API
+        try {
+            const isDfLoaded = pyodide.globals.get('df');
+
+            if (!isDfLoaded) {
+                // Try to reload if file exists using FS API
+                let fileExists = false;
+                try {
+                    pyodide.FS.stat(fileName);
+                    fileExists = true;
+                } catch (e) {
+                    fileExists = false;
+                }
+
+                if (fileExists) {
+                    console.log("Reloading df from file:", fileName);
+                    pyodide.runPython(`
+                        import pandas as pd
+                        df = pd.read_csv('${fileName.replace(/'/g, "\\'")}')
+                    `);
+                } else if (selectedFile && selectedFile.name === fileName && typeof selectedFile.text === 'function') {
+                    // Recovery: Write file to FS if we have the object
+                    console.log("Restoring file to FS from memory:", fileName);
+                    const text = await selectedFile.text();
+                    pyodide.FS.writeFile(fileName, text);
+                    pyodide.runPython(`
+                        import pandas as pd
+                        df = pd.read_csv('${fileName.replace(/'/g, "\\'")}')
+                    `);
+                } else {
+                    console.warn("File not found in FS:", fileName);
+                    setMessages(prev => [...prev, {
+                        role: 'assistant',
+                        content: "⚠️ Error: The dataset is not currently loaded in memory. Please re-upload the CSV file to continue analysis."
+                    }]);
+                    setIsLoading(false);
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error("Error checking df state:", e);
+        }
 
         try {
             const response = await fetch('http://localhost:8000/generate', {
@@ -222,4 +266,3 @@ export default function ChatInterface({ pyodide, columns, fileName, messages, se
         </Card>
     );
 }
-

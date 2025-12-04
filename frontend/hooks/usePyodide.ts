@@ -15,6 +15,14 @@ export default function usePyodide() {
   useEffect(() => {
     const load = async () => {
       if (pyodideRef.current) {
+        // Ensure seaborn is loaded even if instance exists (hot reload case)
+        try {
+          await pyodideRef.current.loadPackage("micropip");
+          const micropip = pyodideRef.current.pyimport("micropip");
+          await micropip.install("seaborn");
+        } catch (e) {
+          console.error("Failed to load seaborn on reload:", e);
+        }
         setPyodide(pyodideRef.current);
         setIsLoading(false);
         return;
@@ -23,28 +31,28 @@ export default function usePyodide() {
       try {
         // Wait for the script to load if it hasn't already
         if (!window.loadPyodide) {
-            // Retry a few times or wait? 
-            // Better to rely on the script being in layout and ready.
-            // But we can dynamically load it here if we want.
-            // Let's assume it's in layout for now, but we might need to poll.
-            let retries = 0;
-            while (!window.loadPyodide && retries < 10) {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                retries++;
-            }
-            if (!window.loadPyodide) {
-                console.error("Pyodide script not loaded");
-                return;
-            }
+          let retries = 0;
+          while (!window.loadPyodide && retries < 10) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            retries++;
+          }
+          if (!window.loadPyodide) {
+            console.error("Pyodide script not loaded");
+            return;
+          }
         }
 
         const py = await window.loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
+          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/"
         });
-        
+
         await py.loadPackage("pandas");
         await py.loadPackage("matplotlib");
-        
+        await py.loadPackage("micropip");
+
+        const micropip = py.pyimport("micropip");
+        await micropip.install("seaborn");
+
         pyodideRef.current = py;
         setPyodide(py);
         setIsLoading(false);
@@ -53,7 +61,7 @@ export default function usePyodide() {
         setIsLoading(false);
       }
     };
-    
+
     load();
   }, []);
 
