@@ -42,7 +42,7 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, variant, size, asChild = false, ...props }, ref) => {
-        const Comp = asChild ? Slot : motion.button
+        const Comp = (asChild ? Slot : motion.button) as any
 
         // Only apply motion props if not a Slot (Slot doesn't accept motion props directly in this pattern easily without more work)
         // For simplicity, we'll assume standard button usage for animations.
