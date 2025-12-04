@@ -1,81 +1,101 @@
 # CSV Chat RAG 📊🤖
 
-A powerful, privacy-focused application that allows you to chat with your CSV data using AI. Upload your datasets, ask questions in plain English, and get instant analysis and visualizations—all without your data ever leaving your browser.
+**Chat with your data, privately and securely.**
+
+CSV Chat RAG is a modern web application that enables users to perform complex data analysis on CSV files using natural language. It leverages **WebAssembly (Pyodide)** to execute Python code directly in your browser, ensuring that your actual dataset **never leaves your device**. The backend uses advanced LLMs (via Groq) solely to translate your questions into executable Python code.
 
 ![Project Banner](https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop)
 
-## 🌟 Features
+## 🌟 Key Features
 
--   **🔒 Privacy First**: Your CSV data is processed entirely client-side using **Pyodide**. The actual dataset is **never** sent to the server.
--   **💬 Natural Language Interface**: Ask questions like "Show me the distribution of sales" or "Plot the correlation between age and salary".
--   **📈 Instant Visualizations**: Generates interactive matplotlib charts and graphs directly in the chat.
--   **⚡ Real-time Analysis**: Powered by Python running directly in your browser (WebAssembly).
--   **🤖 AI-Powered**: Uses advanced LLMs (via Groq/Moonshot) to translate your questions into Python code.
+*   **🔒 Privacy-First Architecture**: Your CSV data is loaded into the browser's memory and processed locally. Only the *schema* (column names) is sent to the AI, not the rows.
+*   **⚡ Client-Side Execution**: Powered by **Pyodide** (Python compiled to WebAssembly), allowing for real-time data manipulation and analysis without server latency.
+*   **🤖 AI-Driven Analysis**: Uses **LangChain** and **Groq** (specifically the `moonshotai/kimi-k2-instruct-0905` model) to understand your questions and generate accurate Pandas/Matplotlib code.
+*   **📈 Interactive Visualizations**: Instantly generate and render Matplotlib charts (bar, line, scatter, etc.) directly in the chat interface.
+*   **🎨 Modern UI/UX**: Built with **Next.js 16**, **Tailwind CSS v4**, and **Framer Motion** for a smooth, responsive, and beautiful user experience.
 
 ## 🛠️ Tech Stack
 
 ### Frontend
--   **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
--   **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
--   **Python Runtime**: [Pyodide](https://pyodide.org/) (WebAssembly)
--   **Icons**: [Lucide React](https://lucide.dev/)
--   **Animations**: [Framer Motion](https://www.framer.com/motion/)
+*   **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+*   **Language**: TypeScript
+*   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+*   **Components**: [Shadcn UI](https://ui.shadcn.com/) (Radix Primitives)
+*   **Python Runtime**: [Pyodide](https://pyodide.org/) (v0.23.4)
+*   **Animations**: [Framer Motion](https://www.framer.com/motion/)
+*   **Icons**: [Lucide React](https://lucide.dev/)
 
 ### Backend
--   **Framework**: [FastAPI](https://fastapi.tiangolo.com/)
--   **AI/LLM**: [LangChain](https://www.langchain.com/) & [Groq](https://groq.com/)
--   **Validation**: [Pydantic](https://docs.pydantic.dev/)
+*   **Framework**: [FastAPI](https://fastapi.tiangolo.com/)
+*   **AI Orchestration**: [LangChain](https://www.langchain.com/)
+*   **LLM Provider**: [Groq](https://groq.com/)
+*   **Model**: `moonshotai/kimi-k2-instruct-0905`
+*   **Server**: Uvicorn
 
-## 🚀 How It Works
+## 🚀 Logic Flow
 
-1.  **Upload**: You drop a CSV file. It's loaded into the browser's memory and Pyodide's virtual filesystem.
-2.  **Schema Extraction**: The app reads the columns locally.
-3.  **Question**: You ask a question. The app sends **only** the column names and your question to the backend.
-4.  **Code Generation**: The AI generates Python code to answer your question.
-5.  **Execution**: The code is sent back and executed by Pyodide in your browser against your local file.
-6.  **Result**: You see the text answer or plot immediately.
+1.  **Upload**: User drops a CSV file. It is read into the browser's memory and saved to Pyodide's virtual filesystem (`/home/pyodide/filename.csv`).
+2.  **Schema Extraction**: Pyodide reads the file locally to extract column names.
+3.  **Question**: User asks a question (e.g., "Plot sales over time").
+4.  **Prompting**: The frontend sends the *question* and *column names* (NOT the data) to the FastAPI backend.
+5.  **Code Generation**: The backend uses Groq to generate a Python script that uses `pandas` and `matplotlib`.
+6.  **Execution**: The generated code is returned to the frontend and executed by Pyodide against the local CSV file.
+7.  **Rendering**: Text output is displayed, and plots are captured as Base64 strings and rendered as images.
 
 ## 🏁 Getting Started
 
 ### Prerequisites
--   Node.js (v18+)
--   Python (v3.10+)
--   A Groq or Moonshot AI API Key
+*   Node.js (v18+)
+*   Python (v3.10+)
+*   A [Groq API Key](https://console.groq.com/)
 
-### 1. Backend Setup
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Aafimalek/csv_chat
+cd csv_chat
+```
+
+### 2. Backend Setup
 
 ```bash
 cd backend
+
 # Create virtual environment
 python -m venv venv
-# Activate it (Windows)
+
+# Activate (Windows)
 .\venv\Scripts\activate
-# Activate it (Mac/Linux)
+# Activate (Mac/Linux)
 source venv/bin/activate
 
 # Install dependencies
-pip install fastapi uvicorn python-dotenv langchain-groq pydantic
+pip install -r requirements.txt
 
-# Create .env file
-echo "MOONSHOT_API_KEY=your_api_key_here" > .env
+# Configure Environment
+# Create a .env file and add your Groq API key
+echo "GROQ_API_KEY=your_actual_api_key_here" > .env
 
 # Run the server
 uvicorn main:app --reload
 ```
+*The backend will run on `http://localhost:8000`*
 
-### 2. Frontend Setup
+### 3. Frontend Setup
+
+Open a new terminal:
 
 ```bash
 cd frontend
+
 # Install dependencies
 npm install
 
 # Run the development server
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+*The frontend will run on `http://localhost:3000`*
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is open source and available under the MIT License.
