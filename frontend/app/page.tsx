@@ -3,7 +3,8 @@ import { useState } from 'react';
 import usePyodide from '@/hooks/usePyodide';
 import FileUpload from '@/components/FileUpload';
 import ChatInterface from '@/components/ChatInterface';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, Github } from 'lucide-react';
+import { AuroraBackground } from '@/components/ui/aurora-background';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -55,8 +56,8 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+    <AuroraBackground>
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50 w-full">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold shadow-lg shadow-primary/20">
@@ -66,16 +67,27 @@ export default function Home() {
               CSV Chat RAG
             </h1>
           </div>
-          {file && (
+          <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              onClick={() => setFile(null)}
-              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              onClick={() => window.open('https://github.com/Aafimalek/csv_chat', '_blank')}
+              className="gap-2"
             >
-              Reset / New File
+              <Github className="w-4 h-4" />
+              <span className="hidden sm:inline">GitHub</span>
             </Button>
-          )}
+            {file && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFile(null)}
+                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              >
+                Reset / New File
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -138,6 +150,6 @@ export default function Home() {
           )}
         </AnimatePresence>
       </div>
-    </main>
+    </AuroraBackground>
   );
 }
