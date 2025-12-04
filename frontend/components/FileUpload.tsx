@@ -38,7 +38,7 @@ export default function FileUpload({ onFileSelect }: FileUploadProps) {
     return (
         <div
             className={cn(
-                "w-full max-w-xl p-12 border-2 border-dashed rounded-xl transition-all duration-300 ease-in-out flex flex-col items-center justify-center cursor-pointer group relative overflow-hidden",
+                "w-full max-w-xl p-12 border-2 border-dashed rounded-none transition-all duration-300 ease-in-out flex flex-col items-center justify-center cursor-pointer group relative overflow-hidden",
                 isDragging
                     ? "border-primary bg-primary/10 scale-[1.02]"
                     : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50 bg-card"

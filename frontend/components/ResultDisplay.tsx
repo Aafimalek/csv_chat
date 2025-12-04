@@ -41,7 +41,7 @@ export default function ResultDisplay({ output, plotImage }: ResultDisplayProps)
                             <img
                                 src={`data:image/png;base64,${plotImage}`}
                                 alt="Generated Plot"
-                                className="max-w-full h-auto rounded-md shadow-sm"
+                                className="max-w-full h-auto rounded-none shadow-sm"
                             />
                         </div>
                     </CardContent>

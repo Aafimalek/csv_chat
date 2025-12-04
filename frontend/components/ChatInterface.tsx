@@ -6,22 +6,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
-interface ChatInterfaceProps {
-    pyodide: any;
-    columns: string[];
-    fileName: string;
-}
-
-interface Message {
+export interface Message {
     role: 'user' | 'assistant';
     content: string;
     plot?: string | null;
     code?: string;
 }
 
-export default function ChatInterface({ pyodide, columns, fileName }: ChatInterfaceProps) {
-    const [messages, setMessages] = useState<Message[]>([]);
+interface ChatInterfaceProps {
+    pyodide: any;
+    columns: string[];
+    fileName: string;
+    messages: Message[];
+    setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
+}
+
+export default function ChatInterface({ pyodide, columns, fileName, messages, setMessages }: ChatInterfaceProps) {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -128,50 +130,58 @@ export default function ChatInterface({ pyodide, columns, fileName }: ChatInterf
                         </div>
                     </div>
                 )}
-                {messages.map((msg, idx) => (
-                    <div key={idx} className={cn("flex w-full", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-                        <div className={cn(
-                            "flex gap-3 max-w-[90%]",
-                            msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                        )}>
+                <AnimatePresence initial={false}>
+                    {messages.map((msg, idx) => (
+                        <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className={cn("flex w-full", msg.role === 'user' ? 'justify-end' : 'justify-start')}
+                        >
                             <div className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                                msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                "flex gap-3 max-w-[90%]",
+                                msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                             )}>
-                                {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                            </div>
+                                <div className={cn(
+                                    "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
+                                    msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                )}>
+                                    {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                                </div>
 
-                            <div className={cn(
-                                "rounded-2xl p-4 shadow-sm",
-                                msg.role === 'user'
-                                    ? 'bg-primary text-primary-foreground rounded-tr-none'
-                                    : 'bg-muted/50 border border-border rounded-tl-none'
-                            )}>
-                                {msg.role === 'user' ? (
-                                    <p className="text-sm leading-relaxed">{msg.content}</p>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {msg.code && (
-                                            <details className="group">
-                                                <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1 list-none">
-                                                    <Code2 className="w-3 h-3" />
-                                                    <span className="group-open:hidden">View Generated Code</span>
-                                                    <span className="hidden group-open:inline">Hide Generated Code</span>
-                                                </summary>
-                                                <div className="mt-2 rounded-md bg-black/90 p-3 overflow-x-auto border border-border/50">
-                                                    <pre className="text-xs text-green-400 font-mono">
-                                                        {msg.code}
-                                                    </pre>
-                                                </div>
-                                            </details>
-                                        )}
-                                        <ResultDisplay output={msg.content} plotImage={msg.plot || null} />
-                                    </div>
-                                )}
+                                <div className={cn(
+                                    "rounded-none p-4 shadow-sm neo-border",
+                                    msg.role === 'user'
+                                        ? 'bg-primary text-primary-foreground rounded-tr-none'
+                                        : 'bg-muted/50 border border-border rounded-tl-none'
+                                )}>
+                                    {msg.role === 'user' ? (
+                                        <p className="text-sm leading-relaxed">{msg.content}</p>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {msg.code && (
+                                                <details className="group">
+                                                    <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors flex items-center gap-1 list-none">
+                                                        <Code2 className="w-3 h-3" />
+                                                        <span className="group-open:hidden">View Generated Code</span>
+                                                        <span className="hidden group-open:inline">Hide Generated Code</span>
+                                                    </summary>
+                                                    <div className="mt-2 rounded-md bg-black/90 p-3 overflow-x-auto border border-border/50">
+                                                        <pre className="text-xs text-green-400 font-mono">
+                                                            {msg.code}
+                                                        </pre>
+                                                    </div>
+                                                </details>
+                                            )}
+                                            <ResultDisplay output={msg.content} plotImage={msg.plot || null} />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                ))}
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
                 {isLoading && (
                     <div className="flex justify-start">
                         <div className="flex gap-3">
@@ -210,3 +220,4 @@ export default function ChatInterface({ pyodide, columns, fileName }: ChatInterf
         </Card>
     );
 }
+
