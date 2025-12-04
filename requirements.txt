@@ -1,5 +1,0 @@
-fastapi
-uvicorn
-langchain-groq
-python-dotenv
-pydantic
