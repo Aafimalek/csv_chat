@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import usePyodide from '@/hooks/usePyodide';
 import FileUpload from '@/components/FileUpload';
 import ChatInterface, { Message } from '@/components/ChatInterface';
-import { Loader2, Sparkles, Github } from 'lucide-react';
+import { Loader2, Database, Github } from 'lucide-react';
 import { AuroraBackground } from '@/components/ui/aurora-background';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -161,10 +161,10 @@ export default function Home() {
           <div className="w-full px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-none flex items-center justify-center text-primary-foreground font-bold neo-shadow border-2 border-black">
-                <Sparkles className="w-4 h-4" />
+                <Database className="w-4 h-4" />
               </div>
-              <h1 className="text-xl font-black tracking-tighter uppercase">
-                CSV Chat RAG
+              <h1 className="text-xl font-black tracking-tighter">
+                QueryCSV
               </h1>
             </div>
             <div className="flex items-center gap-2">
@@ -209,10 +209,10 @@ export default function Home() {
                 <Card className="border-2 border-border shadow-none neo-shadow bg-card">
                   <CardHeader className="text-center space-y-4 pb-8">
                     <div className="mx-auto w-16 h-16 bg-primary text-primary-foreground rounded-none flex items-center justify-center mb-4 neo-shadow border-2 border-black">
-                      <Sparkles className="w-8 h-8" />
+                      <Database className="w-8 h-8" />
                     </div>
-                    <CardTitle className="text-4xl font-black tracking-tighter uppercase lg:text-5xl">
-                      Analyze Data
+                    <CardTitle className="text-4xl font-black tracking-tighter lg:text-5xl">
+                      QueryCSV
                     </CardTitle>
                     <CardDescription className="text-lg font-medium text-foreground">
                       Upload a CSV file to start chatting.

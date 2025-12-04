@@ -63,6 +63,8 @@ export default function ChatInterface({ pyodide, columns, fileName, messages, se
             pyodide.runPython(`
         import sys
         import io
+        import matplotlib.pyplot as plt
+        plt.close('all')
         sys.stdout = io.StringIO()
       `);
 
@@ -84,7 +86,7 @@ export default function ChatInterface({ pyodide, columns, fileName, messages, se
           plt.savefig(buf, format='png')
           buf.seek(0)
           img_str = base64.b64encode(buf.read()).decode('utf-8')
-          plt.clf()
+          plt.close('all')
         `);
                 plotBase64 = pyodide.globals.get('img_str');
             }

@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CSV Chat RAG",
+  title: "QueryCSV",
   description: "Chat with your CSV data securely",
 };
 
