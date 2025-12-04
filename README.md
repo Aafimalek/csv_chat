@@ -1,8 +1,8 @@
-# CSV Chat RAG 📊🤖
+# QueryCSV 📊🤖
 
 **Chat with your data, privately and securely.**
 
-CSV Chat RAG is a modern web application that enables users to perform complex data analysis on CSV files using natural language. It leverages **WebAssembly (Pyodide)** to execute Python code directly in your browser, ensuring that your actual dataset **never leaves your device**. The backend uses advanced LLMs (via Groq) solely to translate your questions into executable Python code.
+QueryCSV is a modern, privacy-focused web application that enables users to perform complex data analysis on CSV files using natural language. Unlike traditional tools, QueryCSV executes all data processing **locally in your browser** using WebAssembly (Pyodide), ensuring your sensitive datasets never leave your device. The backend uses advanced LLMs solely to translate your questions into executable Python code.
 
 ![Project Banner](https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop)
 
@@ -10,9 +10,12 @@ CSV Chat RAG is a modern web application that enables users to perform complex d
 
 *   **🔒 Privacy-First Architecture**: Your CSV data is loaded into the browser's memory and processed locally. Only the *schema* (column names) is sent to the AI, not the rows.
 *   **⚡ Client-Side Execution**: Powered by **Pyodide** (Python compiled to WebAssembly), allowing for real-time data manipulation and analysis without server latency.
-*   **🤖 AI-Driven Analysis**: Uses **LangChain** and **Groq** (specifically the `moonshotai/kimi-k2-instruct-0905` model) to understand your questions and generate accurate Pandas/Matplotlib code.
-*   **📈 Interactive Visualizations**: Instantly generate and render Matplotlib charts (bar, line, scatter, etc.) directly in the chat interface.
-*   **🎨 Modern UI/UX**: Built with **Next.js 16**, **Tailwind CSS v4**, and **Framer Motion** for a smooth, responsive, and beautiful user experience.
+*   **💾 Persistent Sessions**:
+    *   **IndexedDB**: Automatically saves your uploaded files to your browser's secure database, so you can refresh the page without losing your data.
+    *   **LocalStorage**: Persists your chat history and sessions, allowing you to switch between multiple analyses seamlessly.
+*   **🤖 AI-Driven Analysis**: Uses **LangChain** and **Groq** (specifically the `moonshotai/kimi-k2-instruct-0905` model) to understand your questions and generate accurate Pandas/Matplotlib/Seaborn code.
+*   **📈 Advanced Visualizations**: Instantly generate and render charts (bar, line, scatter, pairplots, heatmaps) directly in the chat interface using `matplotlib` and `seaborn`.
+*   **🎨 Modern Neobrutalist UI**: Built with **Next.js 16**, **Tailwind CSS v4**, and **Framer Motion**, featuring a distinct "sharp" aesthetic, dark mode support, and smooth animations.
 
 ## 🛠️ Tech Stack
 
@@ -22,6 +25,7 @@ CSV Chat RAG is a modern web application that enables users to perform complex d
 *   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
 *   **Components**: [Shadcn UI](https://ui.shadcn.com/) (Radix Primitives)
 *   **Python Runtime**: [Pyodide](https://pyodide.org/) (v0.23.4)
+*   **Persistence**: IndexedDB (via native API) & LocalStorage
 *   **Animations**: [Framer Motion](https://www.framer.com/motion/)
 *   **Icons**: [Lucide React](https://lucide.dev/)
 
@@ -34,13 +38,14 @@ CSV Chat RAG is a modern web application that enables users to perform complex d
 
 ## 🚀 Logic Flow
 
-1.  **Upload**: User drops a CSV file. It is read into the browser's memory and saved to Pyodide's virtual filesystem (`/home/pyodide/filename.csv`).
+1.  **Upload**: User drops a CSV file. It is saved to **IndexedDB** for persistence and loaded into Pyodide's virtual filesystem (`/home/pyodide/filename.csv`).
 2.  **Schema Extraction**: Pyodide reads the file locally to extract column names.
-3.  **Question**: User asks a question (e.g., "Plot sales over time").
+3.  **Question**: User asks a question (e.g., "Create a pairplot of Price vs Stock").
 4.  **Prompting**: The frontend sends the *question* and *column names* (NOT the data) to the FastAPI backend.
-5.  **Code Generation**: The backend uses Groq to generate a Python script that uses `pandas` and `matplotlib`.
+5.  **Code Generation**: The backend uses Groq to generate a Python script that uses `pandas`, `matplotlib`, `seaborn`, and `scikit-learn`.
 6.  **Execution**: The generated code is returned to the frontend and executed by Pyodide against the local CSV file.
 7.  **Rendering**: Text output is displayed, and plots are captured as Base64 strings and rendered as images.
+8.  **Recovery**: If the page is refreshed, the app automatically retrieves the file from IndexedDB and restores the Pyodide session.
 
 ## 🏁 Getting Started
 
