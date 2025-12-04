@@ -18,6 +18,7 @@ export default function usePyodide() {
         // Ensure seaborn is loaded even if instance exists (hot reload case)
         try {
           await pyodideRef.current.loadPackage("micropip");
+          await pyodideRef.current.loadPackage("scikit-learn");
           const micropip = pyodideRef.current.pyimport("micropip");
           await micropip.install("seaborn");
         } catch (e) {
@@ -48,6 +49,7 @@ export default function usePyodide() {
 
         await py.loadPackage("pandas");
         await py.loadPackage("matplotlib");
+        await py.loadPackage("scikit-learn");
         await py.loadPackage("micropip");
 
         const micropip = py.pyimport("micropip");

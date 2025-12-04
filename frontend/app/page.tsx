@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Sidebar, ChatSession } from '@/components/Sidebar';
 import { v4 as uuidv4 } from 'uuid';
 import { ModeToggle } from '@/components/mode-toggle';
+import { saveFileToDB, getFileFromDB } from '@/lib/db';
 
 export default function Home() {
   const { pyodide, isLoading: isPyodideLoading } = usePyodide();
@@ -76,6 +77,9 @@ export default function Home() {
     setIsProcessing(true);
 
     try {
+      // Save to IndexedDB for persistence across refreshes
+      await saveFileToDB(selectedFile);
+
       const text = await selectedFile.text();
       pyodide.FS.writeFile(selectedFile.name, text);
       pyodide.runPython(`
@@ -128,21 +132,36 @@ export default function Home() {
 
     setCurrentSessionId(id);
 
-    // Determine filename: use saved fileName, or fallback to title (for legacy sessions), or default
+    // Determine filename
     const fileName = session.fileName || session.title || "Restored Session";
-
-    // Always set file to switch UI to chat mode
-    // BUT only create a dummy file if we don't already have the real one loaded
-    if (!file || file.name !== fileName) {
-      setFile({ name: fileName } as File);
-    }
 
     // Restore columns if available
     if (session.columns) {
       setColumns(session.columns);
     }
 
-    // Try to restore Pyodide context if we have a valid filename
+    // Try to get the real file object
+    let fileToSet: File | null = file;
+
+    // If current file doesn't match, try to load from DB
+    if (!file || file.name !== fileName) {
+      try {
+        const dbFile = await getFileFromDB(fileName);
+        if (dbFile) {
+          console.log("Restored file from IndexedDB:", fileName);
+          fileToSet = dbFile;
+        } else {
+          // Fallback to dummy if not in DB (user cleared cache or used different device)
+          fileToSet = { name: fileName } as File;
+        }
+      } catch (e) {
+        console.error("Failed to load from DB:", e);
+        fileToSet = { name: fileName } as File;
+      }
+      setFile(fileToSet);
+    }
+
+    // Try to restore Pyodide context
     if (fileName) {
       try {
         // Check if file exists in Pyodide FS
@@ -157,10 +176,23 @@ export default function Home() {
                       df = pd.read_csv('${fileName}')
                   `);
           console.log("Context restored for", fileName);
+        } else if (fileToSet && typeof fileToSet.text === 'function') {
+          // We have the real file (from DB or memory), let ChatInterface handle the restoration
+          // or we could do it here, but ChatInterface has the logic.
+          // Actually, ChatInterface logic runs on submit. 
+          // Let's proactively load it here to be safe and avoid the "not loaded" state initially?
+          // No, let's let ChatInterface handle it lazily or we can do it here.
+          // Doing it here provides immediate feedback.
+          console.log("Pre-loading file into Pyodide from restored object");
+          const text = await fileToSet.text();
+          pyodide.FS.writeFile(fileName, text);
+          pyodide.runPython(`
+                import pandas as pd
+                df = pd.read_csv('${fileName.replace(/'/g, "\\'")}')
+           `);
         } else {
-          console.warn("File not found in memory:", fileName);
-          // Notify user they might need to re-upload if they want to run code
-          // We only add this system message if it's not already the last message to avoid spamming
+          console.warn("File not found in memory or DB:", fileName);
+          // Notify user
           setMessages(prev => {
             const lastMsg = prev[prev.length - 1];
             if (lastMsg?.content?.includes("not currently loaded")) return prev;
