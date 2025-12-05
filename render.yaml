@@ -26,4 +26,4 @@ services:
         fromService:
           type: web
           name: csv-chat-backend
-          property: url
+          envVarKey: RENDER_EXTERNAL_URL
